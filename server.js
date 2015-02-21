@@ -10,6 +10,14 @@ var app  = express();
 
 
 
+// Test end point
+app.get('/test', function(req, res) {
+  res.set('Content-Type', 'application/json');
+  res.send({A:1, B:2, C:[1,2,3]});
+});
+
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
