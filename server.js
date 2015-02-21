@@ -1,7 +1,10 @@
 // Node
 var static = require('node-static'),
 request = require("request"),
-express = require('express');
+express = require('express'),
+passport = require("passport"),
+session = require('express-session'),
+LinkedInStrategy = require("passport-linkedin-oauth2").Strategy;
 
 fs = require('fs');
 readline = require('readline');
@@ -14,11 +17,25 @@ var changeMap = {};
 var summaryMap = {};
 
 
+// Authentication
+var authLinkedInCallbackUrl = "http://localhost:8080/auth/linkedin/callback",
+    LINKEDIN_KEY    = "78y246zab90skx",
+    LINKEDIN_SECRET = "7SOVUfEnmZECECCb";
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Create a node-static server instance to serve the './page' folder
 ////////////////////////////////////////////////////////////////////////////////
 var file = new(static.Server)('./');
 var app  = express();
+
+///////////////////////////////////////////////////////////////////////////////
+// Configuration
+///////////////////////////////////////////////////////////////////////////////
+app.use(express.static('public'));
+app.use(session({ secret: 'keyboard cat' }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 function parseSummary(file) {
@@ -137,6 +154,39 @@ app.get('/summary', function(req, res) {
   });
 });
 
+/////////////////////////////////////////////////////////////////////////////
+// LinkedIn Authentication
+/////////////////////////////////////////////////////////////////////////////
+passport.use(new LinkedInStrategy({
+  clientID: LINKEDIN_KEY,
+  clientSecret: LINKEDIN_SECRET,
+  callbackURL: authLinkedInCallbackUrl,
+  scope: ['r_basicprofile'],
+  state: true
+}, function(accessToken, refreshToken, profile, done) {
+      console.log(accessToken);
+    console.log(refreshToken);
+  process.nextTick(function () {
+    // To keep the example simple, the user's LinkedIn profile is returned to 
+    // represent the logged-in user. In a typical application, you would want 
+    // to associate the LinkedIn account with a user record in your database, 
+    // and return that user instead.
+
+    return done(null, profile);
+  });
+}));
+
+app.get('/auth/linkedin',
+  passport.authenticate('linkedin'),
+  function(req, res){
+    // The request will be redirected to LinkedIn for authentication, so this 
+    // function will not be called. 
+  });
+
+app.get('/auth/linkedin/callback', passport.authenticate('linkedin', {
+  successRedirect: '/',
+  failureRedirect: '/login'
+}));
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,4 +197,4 @@ app.get(/\w*/, function(req, res){
 });
 
 app.listen(8080);
-console.log('Listening on port 8080. Cheers!...');
+console.log('Listening on port 8080. Enjoy your burrito!...');

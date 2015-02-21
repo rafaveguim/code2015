@@ -18,11 +18,14 @@
   "homepage": "https://github.com/rafaveguim/code2015",
   "dependencies": {
     "express": "~4.11.2",
+    "express-session": "1.10.3",
     "static": "~2.0.0",
     "request": "~2.53.0",
     "node-static": "~0.7.6",
     "fs": "0.0.2",
     "readline": "0.0.7",
-    "csv": "~0.4.1"
+    "csv": "~0.4.1",
+    "passport": "0.2.1",
+    "passport-linkedin-oauth2": "1.2.1"
   }
 }
