@@ -9,8 +9,16 @@ Setup
   make
   ```
 
-- Install server and data packages
+
+- Install server packages
 
   ```
   npm install
+  ```
+
+
+- Run the server, server is default to run on port 8080
+  
+  ```
+  node server.js
   ```

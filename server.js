@@ -7,11 +7,11 @@ fs = require('fs');
 readline = require('readline');
 
 
-
 // Data
 var occupationMap = {};
 var projectionMap = {};
 var changeMap = {};
+var summaryMap = {};
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,28 @@ var changeMap = {};
 var file = new(static.Server)('./');
 var app  = express();
 
+
+function parseSummary(file) {
+  var rd = readline.createInterface({
+    input: fs.createReadStream( file ),
+    terminal: false
+  });
+
+  rd.on('line', function(line) {
+    var t = line.split(',');
+    var code = t[0];
+
+    summaryMap[code] = {};
+    summaryMap[code].cumulative_growth = t[2] * 1000;
+    summaryMap[code].cumulative_retirement = t[3 * 1000];
+    summaryMap[code].cumulative_other_replacement = t[4] * 1000;
+    summaryMap[code].cumulative_job_openings = t[5] * 1000;
+    summaryMap[code].cumulative_school_leavers = t[6] * 1000;
+    summaryMap[code].cumulative_immigrants = t[7] * 1000;
+    summaryMap[code].cumulative_job_seekers = t[9] * 1000;
+    summaryMap[code].projected_assessment = t[12]; // Balanced  or Shortage
+  });
+}
 
 
 function parseOccupationGrouping(file) {
@@ -33,8 +55,6 @@ function parseOccupationGrouping(file) {
     var tokens = line.split('\|');
     tokens[1] = tokens[1].replace(/^\"/, '');
     tokens[1] = tokens[1].replace(/\"$/, '');
-    // console.log(tokens[1]);
-
     occupationMap[tokens[0]] = tokens[1];
   });
   return occupationMap;
@@ -83,6 +103,7 @@ function parseChanges(file) {
 }
 
 
+parseSummary("./data/summary.csv");
 parseOccupationGrouping("./data/cops.csv");
 parseProjections("./data/projections.csv");
 parseChanges("./data/change.csv");
@@ -107,6 +128,14 @@ app.get('/query', function(req, res) {
 });
 
 
+app.get('/summary', function(req, res) {
+  var code = req.query.code;
+  res.set('Content-Type', 'application/json');
+  res.send({
+    code: code, 
+    summary: summaryMap[code]
+  });
+});
 
 
 
