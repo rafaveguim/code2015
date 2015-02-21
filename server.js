@@ -2,9 +2,13 @@
 var static = require('node-static'),
 request = require("request"),
 express = require('express');
-
 fs = require('fs');
 readline = require('readline');
+
+
+var fuzzy = require('fuzzy');
+var _ = require('lodash');
+
 
 
 // Data
@@ -120,7 +124,7 @@ app.get('/query', function(req, res) {
   var code = req.query.code;
   res.set('Content-Type', 'application/json');
   res.send({
-    code: code, 
+    code: code,
     name: occupationMap[code],
     projections: projectionMap[code],
     changes: changeMap[code]
@@ -132,9 +136,37 @@ app.get('/summary', function(req, res) {
   var code = req.query.code;
   res.set('Content-Type', 'application/json');
   res.send({
-    code: code, 
+    code: code,
     summary: summaryMap[code]
   });
+});
+
+
+app.get('/search-job', function(req, res) {
+  var q = req.query.q;
+
+  // Flatten
+  var searchList = [];
+  Object.keys(occupationMap).forEach(function(key) {
+    searchList.push({
+      code: key,
+      name: occupationMap[key]
+    });
+  });
+
+  var options = {
+    pre: '<',
+    post: '>',
+    extract: function(el) { return el.name; }
+  };
+  var result = _.orderBy(fuzzy.filter(q, searchList, options);
+
+  res.send({
+    q: q,
+    result: result.slice(0, 5)
+  });
+
+
 });
 
 
