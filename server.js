@@ -1,6 +1,18 @@
+// Node
 var static = require('node-static'),
 request = require("request"),
 express = require('express');
+
+fs = require('fs');
+readline = require('readline');
+
+
+
+// Data
+var occupationMap = {};
+var projectionMap = {};
+var changeMap = {};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Create a node-static server instance to serve the './page' folder
@@ -10,10 +22,88 @@ var app  = express();
 
 
 
+function parseOccupationGrouping(file) {
+  var rd = readline.createInterface({
+    input: fs.createReadStream( file ),
+    terminal: false
+  });
+
+  rd.on('line', function(line) {
+    line = line.replace(/,\"/g, '\|\"');
+    var tokens = line.split('\|');
+    tokens[1] = tokens[1].replace(/^\"/, '');
+    tokens[1] = tokens[1].replace(/\"$/, '');
+    // console.log(tokens[1]);
+
+    occupationMap[tokens[0]] = tokens[1];
+  });
+  return occupationMap;
+}
+
+
+function parseProjections(file) {
+  var rd = readline.createInterface({
+    input: fs.createReadStream( file ),
+    terminal: false
+  });
+
+  rd.on('line', function(line) {
+    var t = line.split(',');
+
+    // Extract code
+    var code = t.shift();
+
+    // Unit is in thousands
+    for (var i=0; i < t.length; i++) {
+      t[i] *= 1000;
+    }
+    projectionMap[code] = t;
+  });
+}
+
+
+function parseChanges(file) {
+  var rd = readline.createInterface({
+    input: fs.createReadStream( file ),
+    terminal: false
+  });
+
+  rd.on('line', function(line) {
+    var t = line.split(',');
+
+    // Extract code
+    var code = t.shift();
+
+    // Unit is in thousands
+    for (var i=0; i < t.length; i++) {
+      t[i] *= 1000;
+    }
+    changeMap[code] = t;
+  });
+}
+
+
+parseOccupationGrouping("./data/cops.csv");
+parseProjections("./data/projections.csv");
+parseChanges("./data/change.csv");
+
+
 // Test end point
 app.get('/test', function(req, res) {
   res.set('Content-Type', 'application/json');
   res.send({A:1, B:2, C:[1,2,3]});
+});
+
+
+app.get('/query', function(req, res) {
+  var code = req.query.code;
+  res.set('Content-Type', 'application/json');
+  res.send({
+    code: code, 
+    name: occupationMap[code],
+    projections: projectionMap[code],
+    changes: changeMap[code]
+  });
 });
 
 
