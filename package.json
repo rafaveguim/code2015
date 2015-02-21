@@ -18,6 +18,8 @@
   "homepage": "https://github.com/rafaveguim/code2015",
   "dependencies": {
     "express": "~4.11.2",
-    "static": "~2.0.0"
+    "static": "~2.0.0",
+    "request": "~2.53.0",
+    "node-static": "~0.7.6"
   }
 }
