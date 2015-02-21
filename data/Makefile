@@ -1,10 +1,10 @@
-all: projections.csv change.csv cops.csv school-leavers.csv immigrants.csv all-supply.csv all-demand.csv emigration-mortality.csv retirements.csv balance.csv
+all: projections.csv change.csv cops.csv school-leavers.csv immigrants.csv all-supply.csv all-demand.csv emigration-mortality.csv retirements.csv summary.csv
 
 
 
 
-balance.csv:
-	curl http://www.edsc.gc.ca/ouvert-open/cesp-pcee/summary_sommaire.csv?_ga=1.165888569.606929506.1424547630 -o balance.csv
+summary.csv:
+	curl http://www.edsc.gc.ca/ouvert-open/cesp-pcee/summary_sommaire.csv?_ga=1.165888569.606929506.1424547630 -o summary.csv
 
 all-supply.csv:
 	curl http://www.edsc.gc.ca/ouvert-open/cesp-pcee/job_seekers_chercheurs_emploi.csv?_ga=1.194659754.606929506.1424547630 -o all-supply.csv
