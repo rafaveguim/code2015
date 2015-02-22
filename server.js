@@ -122,6 +122,7 @@ function parseTimeSeries(file, map) {
     // Unit is in thousands
     for (var i=0; i < t.length; i++) {
       t[i] *= 1000;
+      t[i] = Math.round(t[i]);
     }
     map[code] = t;
   });
@@ -139,13 +140,13 @@ function parseSummary(file) {
     var code = t[0];
 
     summaryMap[code] = {};
-    summaryMap[code].cumulative_growth = t[2] * 1000;
-    summaryMap[code].cumulative_retirement = t[3 * 1000];
-    summaryMap[code].cumulative_other_replacement = t[4] * 1000;
-    summaryMap[code].cumulative_job_openings = t[5] * 1000;
-    summaryMap[code].cumulative_school_leavers = t[6] * 1000;
-    summaryMap[code].cumulative_immigrants = t[7] * 1000;
-    summaryMap[code].cumulative_job_seekers = t[9] * 1000;
+    summaryMap[code].cumulative_growth = Math.round(t[2] * 1000);
+    summaryMap[code].cumulative_retirement = Math.round(t[3 * 1000]);
+    summaryMap[code].cumulative_other_replacement = Math.round(t[4] * 1000);
+    summaryMap[code].cumulative_job_openings = Math.round(t[5] * 1000);
+    summaryMap[code].cumulative_school_leavers = Math.round(t[6] * 1000);
+    summaryMap[code].cumulative_immigrants = Math.round(t[7] * 1000);
+    summaryMap[code].cumulative_job_seekers = Math.round(t[9] * 1000);
     summaryMap[code].projected_assessment = t[12]; // Balanced  or Shortage
   });
 }
