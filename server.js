@@ -142,7 +142,31 @@ function parseOccupationGrouping(file) {
     var tokens = line.split('\|');
     tokens[1] = tokens[1].replace(/^\"/, '');
     tokens[1] = tokens[1].replace(/\"$/, '');
-    occupationMap[tokens[0]] = tokens[1];
+
+    tokens[2] = tokens[2].replace(/^\"/, '');
+    tokens[2] = tokens[2].replace(/\"$/, '');
+    tokens[2] = tokens[2].trim();
+
+    var subtypes = tokens[2].split(';');
+    var subArray = [];
+    
+    for (var i=0; i < subtypes.length; i++) {
+      subtypes[i] = subtypes[i].trim();
+
+      console.log( subtypes[i]);
+
+      subArray.push({
+         subtypeCode: subtypes[i].split(' ')[0].trim(),
+         name: subtypes[i].split(' ').splice(2).join(' ')
+      });
+    }
+    
+
+    occupationMap[tokens[0]] = {
+      name: tokens[1],
+      subtypes: subArray
+    }
+
   });
   return occupationMap;
 }
@@ -157,10 +181,12 @@ parseTimeSeries("./data/all-supply.csv", supplyMap);
 
 
 // Test end point
+/*
 app.get('/test', function(req, res) {
   res.set('Content-Type', 'application/json');
   res.send({A:1, B:2, C:[1,2,3]});
 });
+*/
 
 
 app.get('/module', function(req, res) {
@@ -182,7 +208,7 @@ app.get('/query', function(req, res) {
   res.set('Content-Type', 'application/json');
   res.send({
     code: code,
-    name: occupationMap[code],
+    info: occupationMap[code],
     projections: projectionMap[code],
     changes: changeMap[code],
     supply: supplyMap[code],
@@ -241,9 +267,10 @@ app.get('/search-job', function(req, res) {
   // Flatten
   var searchList = [];
   Object.keys(occupationMap).forEach(function(key) {
+
     searchList.push({
       code: key,
-      name: occupationMap[key]
+      name: occupationMap[key].name + ' ' + _.pluck(occupationMap[key].subtypes, 'name').join(' ')
     });
   });
 
