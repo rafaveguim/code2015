@@ -28,6 +28,8 @@
     "fuzzy": "~0.1.0",
     "lodash": "~3.3.0",
     "passport": "0.2.1",
-    "passport-linkedin-oauth2": "1.2.1"
+    "passport-linkedin-oauth2": "1.2.1",
+    "htmlparser": "~1.7.7",
+    "cheerio": "~0.18.0"
   }
 }

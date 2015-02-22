@@ -12,6 +12,8 @@ readline = require('readline');
 
 var fuzzy = require('fuzzy');
 var _ = require('lodash');
+var cheerio = require('cheerio');
+
 
 
 
@@ -22,10 +24,11 @@ var changeMap = {};
 var summaryMap = {};
 var demandMap = {};
 var supplyMap = {};
+var schoolMap = {};
+
 
 // Just transcribed this since it is small
 // See http://open.canada.ca/data/en/dataset/d635ff7d-0512-475c-8233-d19faa36d4f4
-
 var employmentRate = [
   {
     'label': 'Less than Grade 9',
@@ -85,6 +88,23 @@ app.use(express.static('public'));
 app.use(session({ secret: 'keyboard cat' }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+
+
+
+
+
+
+function getDatasetByType(type) {
+  if (type === 'demand') return demandMap;
+  if (type === 'supply') return supplyMap;
+  if (type === 'projection') return projectionMap;
+  if (type === 'change') return changeMap;
+  if (type === 'school') return schoolMap;
+
+  // Default
+  return demandMap;
+}
 
 
 function parseTimeSeries(file, map) {
@@ -153,7 +173,7 @@ function parseOccupationGrouping(file) {
     for (var i=0; i < subtypes.length; i++) {
       subtypes[i] = subtypes[i].trim();
 
-      console.log( subtypes[i]);
+      // console.log( subtypes[i]);
 
       subArray.push({
          subtypeCode: subtypes[i].split(' ')[0].trim(),
@@ -178,6 +198,7 @@ parseTimeSeries("./data/projections.csv", projectionMap);
 parseTimeSeries("./data/change.csv", changeMap);
 parseTimeSeries("./data/all-demand.csv", demandMap);
 parseTimeSeries("./data/all-supply.csv", supplyMap);
+parseTimeSeries("./data/school-leavers.csv", schoolMap);
 
 
 // Test end point
@@ -187,6 +208,65 @@ app.get('/test', function(req, res) {
   res.send({A:1, B:2, C:[1,2,3]});
 });
 */
+
+// keywordStr ==> a+b+c 
+function createURL(keywordStr) {
+   return 'http://www5.hrsdc.gc.ca/NOC/English/NOC/2011/SearchDescriptionResult.aspx?val27=' + keywordStr + 
+     '&val28=0&val29=0&val30=2&val31=2&val32=2&val33=2&val34=2&val35=2&val36=2&val37=2&val38=1&val39=0&val40=Section';
+}
+
+
+function getNOC(subtypeCode) {
+   var keys = Object.keys(occupationMap);
+   for (var i=0; i < keys.length; i++) {
+     var codeArray = _.pluck(occupationMap[keys[i]].subtypes, 'subtypeCode');
+
+     if (_.contains(codeArray, subtypeCode)) {
+       return keys[i];
+     }
+   }
+   return null;
+}
+
+
+
+// This scrapes off 
+// http://www5.hrsdc.gc.ca/NOC/English/NOC/2011/SearchDescription.aspx
+app.get('/apisearch', function(req, res) {
+
+  var keywordStr = req.query.keywordStr;
+
+  request({
+    url: createURL(keywordStr),
+    method: 'GET',
+    headers: {
+       'Accept': '*/*'
+    },
+  }, function(err, response, body) {
+    var patt = new RegExp("ProfileDescription");
+    var searchResult = [];
+
+    cc = cheerio.load(body);
+    cc('a').map(function(i, link) {
+      if (link.attribs.href && patt.test(link.attribs.href)) {
+        var subtypeCode = link.children[0].data.split(' ')[0];
+        var code = getNOC(subtypeCode);
+
+        if (code !== null) {
+          searchResult.push(occupationMap[code]);
+        }
+        console.log(link.children[0].data);
+      }
+    });
+
+    res.set('Content-Type', 'application/json');
+    res.send(_.uniq(searchResult));
+
+     
+
+    //console.log(handler.dom);
+  });
+});
 
 
 // For Chris to serve html contents
@@ -204,6 +284,7 @@ app.get('/employment-rate', function(req, res) {
 });
 
 
+// Detail of a specific job
 app.get('/detail', function(req, res) {
   var code = req.query.code;
   res.set('Content-Type', 'application/json');
@@ -213,10 +294,13 @@ app.get('/detail', function(req, res) {
     projections: projectionMap[code],
     changes: changeMap[code],
     supply: supplyMap[code],
-    demand: demandMap[code]
+    demand: demandMap[code],
+    schoolLeavers: schoolMap[code]
   });
 });
 
+
+// Summary of a specific job
 app.get('/summary', function(req, res) {
   var code = req.query.code;
   res.set('Content-Type', 'application/json');
@@ -227,26 +311,47 @@ app.get('/summary', function(req, res) {
 });
 
 
+app.get('/all-demands', function(req, res) {
+  res.set('Content-Type', 'application/json');
+  res.send(demandMap);
+});
+
+app.get('/all-supplies', function(req, res) {
+  res.set('Content-Type', 'application/json');
+  res.send(supplyMap);
+});
+
+app.get('/all-school-leavers', function(req, res) {
+  res.set('Content-Type', 'application/json');
+  res.send(schoolMap);
+});
+
+
+
+
 // Get the top 5
 app.get('/range', function(req, res) {
-  var start = req.query.start;
-  var end = req.query.end;
+  var start = req.query.start || 2013;
+  var end = req.query.end || 2022;
+  var type = req.query.type;
 
   // every thing starts in 2012
-  start = start - 2012;
-  end = end - 2012;
+  start = start - 2013;
+  end = end - 2013;
 
-  var keys = Object.keys(demandMap);
+  var lookup = getDatasetByType(type);
+
+  var keys = Object.keys(lookup);
   var result = [];
   keys.forEach(function(key) {
     var total = 0; 
     for (var i = start; i <= end; i++) {
-      total += demandMap[key][i];
+      total += lookup[key][i];
     }
     result.push({
       code: key,
       name: occupationMap[key] ? occupationMap[key].name : 'N/A',
-      data: demandMap[key],
+      data: lookup[key],
       total: total
     });
   });
