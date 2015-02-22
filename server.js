@@ -189,6 +189,7 @@ app.get('/test', function(req, res) {
 */
 
 
+// For Chris to serve html contents
 app.get('/module', function(req, res) {
   var page = req.query.page;
   fs.readFile('./client_module/'+page, function(err, data) {
@@ -203,7 +204,7 @@ app.get('/employment-rate', function(req, res) {
 });
 
 
-app.get('/query', function(req, res) {
+app.get('/detail', function(req, res) {
   var code = req.query.code;
   res.set('Content-Type', 'application/json');
   res.send({
@@ -261,7 +262,7 @@ app.get('/auth/linkedin/callback', passport.authenticate('linkedin', {
 }));
 
 
-app.get('/search-job', function(req, res) {
+app.get('/search', function(req, res) {
   var q = req.query.q;
 
   // Flatten
