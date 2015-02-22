@@ -227,6 +227,39 @@ app.get('/summary', function(req, res) {
 });
 
 
+// Get the top 5
+app.get('/range', function(req, res) {
+  var start = req.query.start;
+  var end = req.query.end;
+
+  // every thing starts in 2012
+  start = start - 2012;
+  end = end - 2012;
+
+  var keys = Object.keys(demandMap);
+  var result = [];
+  keys.forEach(function(key) {
+    var total = 0; 
+    for (var i = start; i <= end; i++) {
+      total += demandMap[key][i];
+    }
+    result.push({
+      code: key,
+      name: occupationMap[key] ? occupationMap[key].name : 'N/A',
+      data: demandMap[key],
+      total: total
+    });
+  });
+
+  result = _.sortBy(result, function(r) { return -r.total; });
+  result.splice(5);
+
+  res.set('Content-Type', 'application/json');
+  res.send(result);
+});
+
+
+
 /////////////////////////////////////////////////////////////////////////////
 // LinkedIn Authentication
 /////////////////////////////////////////////////////////////////////////////
