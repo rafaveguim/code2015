@@ -245,6 +245,7 @@ app.get('/apisearch', function(req, res) {
   }, function(err, response, body) {
     var patt = new RegExp("ProfileDescription");
     var searchResult = [];
+    var dupe = {};
 
     cc = cheerio.load(body);
     cc('a').map(function(i, link) {
@@ -252,8 +253,15 @@ app.get('/apisearch', function(req, res) {
         var subtypeCode = link.children[0].data.split(' ')[0];
         var code = getNOC(subtypeCode);
 
-        if (code !== null) {
-          searchResult.push(occupationMap[code]);
+        if (code !== null && ! dupe[code] ) {
+          var sresult = {
+            code: code,
+            name: occupationMap[code].name,
+            subtypeCode: occupationMap[code].subtypes
+          };
+          //searchResult.push(occupationMap[code]);
+          searchResult.push( sresult );
+          dupe[code] = 1;
         }
         console.log(link.children[0].data);
       }
@@ -329,11 +337,12 @@ app.get('/all-school-leavers', function(req, res) {
 
 
 
-// Get the top 5
+// Get the top 10
 app.get('/range', function(req, res) {
   var start = req.query.start || 2013;
   var end = req.query.end || 2022;
   var type = req.query.type;
+  var size = req.query.size || 10;
 
   // every thing starts in 2012
   start = start - 2013;
@@ -357,7 +366,7 @@ app.get('/range', function(req, res) {
   });
 
   result = _.sortBy(result, function(r) { return -r.total; });
-  result.splice(5);
+  result.splice(size);
 
   res.set('Content-Type', 'application/json');
   res.send(result);
@@ -402,6 +411,7 @@ app.get('/auth/linkedin/callback', passport.authenticate('linkedin', {
 
 app.get('/search', function(req, res) {
   var q = req.query.q;
+  var size = req.query.size || 10;
 
   // Flatten
   var searchList = [];
@@ -420,9 +430,17 @@ app.get('/search', function(req, res) {
   };
   var result = fuzzy.filter(q, searchList, options);
 
+  result.forEach(function(r) {
+    var code = r.original.code;
+    // Get sub types
+    r.code = code;
+    r.name = occupationMap[code].name;
+    r.subtypes = occupationMap[code].subtypes;
+  });
+
   res.send({
     q: q,
-    result: result.slice(0, 5)
+    result: result.slice(0, size)
   });
 });
 
