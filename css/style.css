@@ -162,7 +162,6 @@ a
 	margin: auto;	
 	padding:20px;
 	background-color: #fff;
-	margin-bottom: 10px;
 }
 
 
@@ -226,6 +225,8 @@ a
 	margin: auto;	
 	padding:20px;
 	background-color: #fff;
+	margin-bottom: 10px;
+
 }
 
 #login h1
@@ -275,14 +276,14 @@ a
 #selection>li
 {
 	float:left;
-	padding:15px;
+	padding:10px;
 	background-color: #fff;
-	margin-right:5px;
+	margin-right:3px;
 	color:#000;
 	border-top:0px solid #0088cc;
 	opacity:0.3;
 	font-weight:bold;
-	font-size:1.2em;
+	font-size:1.1em;
 	text-transform: uppercase;
 	cursor: pointer;
 }

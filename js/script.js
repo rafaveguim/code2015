@@ -193,11 +193,19 @@ function allJobs(){
 
 			$.each(data, function(i,o){
 
-				$("#browse").append("<option value='#3/"+o.name+"/"+i+"'>"+i+": "+o.name+"</option>");
+				if (o.name == "Ma�tres d'h�tel and Hosts/Hostesses") {
 
+					o.name = "Maitres d'hotel and Hosts/Hostesses";
+
+				}
+
+
+				console.log(o.name);
+				$("#browse").append('<option value="#3/'+btoa(o.name)+"/"+i+'">'+o.name+"</option>");
 
 			});
 
+			tinysort("#browse>option");
 		}
 
 	});
@@ -241,7 +249,7 @@ function processPage(){
 
 
 		$("#header_title").text("Job Group Details");
-		$("#detail_welcome>h1").html(hashObj.two);
+		$("#detail_welcome>h1").html(atob(hashObj.two));
 
 		$(".chart").each(function(i,o){
 
@@ -260,7 +268,7 @@ function processPage(){
 function apisearch(){
 
 	$.ajax({
-		url: "/apisearch?size=20&start=2015&end=2017&type=projection&keywordStr="+hashObj.three,
+		url: "/apisearch?size=20&start=2015&end=2017&type=change&keywordStr="+hashObj.three,
 		data: {
 		},
 		success: function(data) {
@@ -273,7 +281,18 @@ function apisearch(){
 
 			$.each(data, function(i,o){
 
-				$("#match_list").append("<a href='#3/"+o.name+"/"+o.code+"'><div class='match_list_bg'></div><h1 style=''>"+o.name+"</h1><p>~"+numberWithCommas(o.total)+" jobs in the next 3 years</p><i class='fa fa-chevron-circle-right'></i></a>");
+				//var newName = o.name;
+				//newName.split('/').join('&#47;');
+
+				//alert(newName);
+
+				if (o.name == "Ma�tres d'h�tel and Hosts/Hostesses") {
+
+					o.name = "Maitres d'hotel and Hosts/Hostesses";
+
+				}
+
+				$("#match_list").append('<a href="#3/'+btoa(o.name)+"/"+o.code+'">'+"<div class='match_list_bg'></div><h1 style=''>"+o.name+"</h1><p>~"+numberWithCommas(o.total)+" jobs in the next 3 years</p><i class='fa fa-chevron-circle-right'></i></a>");
 
 				if (i >= 4) {
 
@@ -328,9 +347,9 @@ function detail(){
 
 				var projections = data.projections;
 
-				$("#projection").text(numberWithCommas(parseInt(projections[year-2013])));
+				$("#projection").text(numberWithCommas(parseInt(projections[year-2012])));
 
-				var rate = (projections[year-2013] / projections[year-2013 - 1] - 1) * 100;
+				var rate = (projections[year-2012] / projections[year-2012 - 1] - 1) * 100;
 
 				if (rate < 0 ){
 
@@ -348,14 +367,14 @@ function detail(){
 				var supply = data.supply;
 				var demand = data.demand;
 
-				$("#supply").text(numberWithCommas(supply[year-2013]));
-				$("#demand").text(numberWithCommas(demand[year-2013]));
-				$("#ratio").text((demand[year-2013] / supply[year-2013]).toFixed(2) + " to 1");
+				$("#supply").text(numberWithCommas(supply[year-2012]));
+				$("#demand").text(numberWithCommas(demand[year-2012]));
+				$("#ratio").text((supply[year-2012] / demand[year-2012]).toFixed(2) + " to 1");
 
 				chart2 = generate("c2", "Supply", supply, "Demand", demand);
 
 				var schoolLeavers = data.schoolLeavers;
-				$("#schoolLeavers").text(numberWithCommas(schoolLeavers[year-2013]));
+				$("#schoolLeavers").text(numberWithCommas(schoolLeavers[year-2012]));
 
 				chart3 = generate("c3", "School Leavers", schoolLeavers);
 
@@ -379,7 +398,7 @@ function detail(){
 function range(){
 
 	$.ajax({
-		url: "/range?size=20&type=projection&start="+hashObj.three+"&end="+(parseInt(hashObj.three) + 2),
+		url: "/range?size=20&type=change&start="+hashObj.three+"&end="+(parseInt(hashObj.three) + 2),
 		data: {
 		},
 		success: function(data) {
@@ -390,7 +409,7 @@ function range(){
 
 			$.each(data, function(i,o){
 
-				$("#match_list").append("<a href='#3/"+o.name+"/"+o.code+"'><div class='match_list_bg'></div><h1>"+o.name+"</h1><p>~"+numberWithCommas(o.total)+" jobs in the next 3 years</p><i class='fa fa-chevron-circle-right'></i></a>");
+				$("#match_list").append("<a href='#3/"+btoa(o.name)+"/"+o.code+"'><div class='match_list_bg'></div><h1>"+o.name+"</h1><p>~"+numberWithCommas(o.total)+" jobs in the following 3 years</p><i class='fa fa-chevron-circle-right'></i></a>");
 
 /*
 					<a href='#3/"+o.name+"/"+o.code+"'><h1>"+o.name+"</h1></a>");
@@ -409,7 +428,7 @@ function range(){
 function popular(){
 
 	$.ajax({
-		url: "/range?start=2015&end=2017&type=projection",
+		url: "/range?start=2015&end=2017&type=change",
 		data: {
 		},
 		success: function(data) {
@@ -419,7 +438,7 @@ function popular(){
 
 			$.each(data, function(i,o){
 
-				$("#popular_list").append("<a href='#3/"+o.name+"/"+o.code+"'><h1>"+o.name+"</h1></a>");
+				$("#popular_list").append("<a href='#3/"+btoa(o.name)+"/"+o.code+"'><h1>"+o.name+"</h1></a>");
 				$("#popular_list>a:last").append("<h2>~"+numberWithCommas(o.total)+" jobs in the next 3 years</h2>");
 
 
@@ -437,7 +456,7 @@ function generate(id, label, data, label2, data2){
 	data.unshift(label);
 
 	var columns = [];
-	columns.push(['x', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022']);
+	columns.push(['x', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022']);
 
 
 	var chart = c3.generate({
