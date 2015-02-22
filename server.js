@@ -236,6 +236,10 @@ function getNOC(subtypeCode) {
 app.get('/apisearch', function(req, res) {
 
   var keywordStr = req.query.keywordStr;
+  var start = req.query.start || 2013;
+  var end = req.query.end || 2022;
+  var type = req.query.type;
+  var lookup = getDatasetByType(type);
 
   request({
     url: createURL(keywordStr),
@@ -267,6 +271,20 @@ app.get('/apisearch', function(req, res) {
         console.log(link.children[0].data);
       }
     });
+
+
+    // Append projection data
+    // every thing starts in 2013
+    start = start - 2013;
+    end = end - 2013;
+    searchResult.forEach(function(result) {
+      var total = 0; 
+      for (var i = start; i <= end; i++) {
+        total += lookup[result.code][i];
+      }
+      result.total = total;
+    });
+
 
     res.set('Content-Type', 'application/json');
     res.send(_.uniq(searchResult));
@@ -349,7 +367,7 @@ app.get('/range', function(req, res) {
   var type = req.query.type;
   var size = req.query.size || 10;
 
-  // every thing starts in 2012
+  // every thing starts in 2013
   start = start - 2013;
   end = end - 2013;
 

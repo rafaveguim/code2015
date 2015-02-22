@@ -443,6 +443,10 @@ $(document).on("click", "#keyword_search", function(e){
 		$("#search").focus();
 
 	} else {
+      
+      // Make text search more forgiving
+      q = q.trim().replace(/\W/g, ' ').replace(/\s+/g, ' ').replace(/\s/g, '+');
+
 
 		var href = $(this).attr("href") + "/" + q;
 		window.location.href = href;
