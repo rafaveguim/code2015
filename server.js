@@ -96,11 +96,13 @@ app.use(passport.session());
 
 
 function getDatasetByType(type) {
+  
   if (type === 'demand') return demandMap;
   if (type === 'supply') return supplyMap;
   if (type === 'projection') return projectionMap;
   if (type === 'change') return changeMap;
   if (type === 'school') return schoolMap;
+  
 
   // Default
   return demandMap;
@@ -236,7 +238,7 @@ function getNOC(subtypeCode) {
 app.get('/apisearch', function(req, res) {
 
   var keywordStr = req.query.keywordStr;
-  var start = req.query.start || 2013;
+  var start = req.query.start || 2012;
   var end = req.query.end || 2022;
   var type = req.query.type;
   var lookup = getDatasetByType(type);
@@ -274,9 +276,9 @@ app.get('/apisearch', function(req, res) {
 
 
     // Append projection data
-    // every thing starts in 2013
-    start = start - 2013;
-    end = end - 2013;
+    // every thing starts in 2012
+    start = start - 2012;
+    end = end - 2012;
     searchResult.forEach(function(result) {
       var total = 0; 
       for (var i = start; i <= end; i++) {
@@ -362,14 +364,14 @@ app.get('/all-jobs', function(req, res) {
 
 // Get the top 10
 app.get('/range', function(req, res) {
-  var start = req.query.start || 2013;
+  var start = req.query.start || 2012;
   var end = req.query.end || 2022;
   var type = req.query.type;
   var size = req.query.size || 10;
 
-  // every thing starts in 2013
-  start = start - 2013;
-  end = end - 2013;
+  // every thing starts in 2012
+  start = start - 2012;
+  end = end - 2012;
 
   var lookup = getDatasetByType(type);
 
