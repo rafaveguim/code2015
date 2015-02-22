@@ -334,6 +334,10 @@ app.get('/all-school-leavers', function(req, res) {
   res.send(schoolMap);
 });
 
+app.get('/all-jobs', function(req, res) {
+  res.set('Content-Type', 'application/json');
+  res.send(occupationMap);
+});
 
 
 
