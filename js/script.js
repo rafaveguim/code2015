@@ -81,7 +81,30 @@ function initHash(){
 	hashObj.five = hashArray[4];
 	hashObj.six = hashArray[5];
 
+	if (chart1 != undefined) {
+
+		chart1.destroy();
+		chart1 = undefined;
+
+	}
+
+	if (chart2 != undefined) {
+
+		chart2.destroy();
+		chart2 = undefined;
+
+	}
+
+	if (chart3 != undefined) {
+
+		chart3.destroy();
+		chart3 = undefined;
+
+	}	
+
 	loadPage();
+
+
 
 }
 
@@ -99,11 +122,10 @@ function loadPage(){
 	}	
 
 	$("#main_menu").removeClass("active");
-	//alert("Hel");
+	$("#header_title").fadeTo(0, 0);
 
-	$("#header_title").fadeTo("fast", 0);
-
-	$("#body").fadeTo("fast", 0, function(){
+	$("body").addClass("loading");
+	$("#body").addClass("loading").fadeTo("fast", 0, function(){
 
 
 		$("#body_content").html("");
@@ -120,7 +142,8 @@ function loadPage(){
 				update_title();
 
 				$("#body").stop().fadeTo("fast", 1);
-				$("#header_title").stop().fadeTo("fast", 1);
+				$("body").removeClass("loading");
+				$("#header_title").stop().fadeTo(0, 1);
 
 				if ($("#header_title").width() <= 320) {
 
@@ -157,6 +180,31 @@ function update_title(){
 
 };
 
+function allJobs(){
+
+	$.ajax({
+		url: "/all-jobs",
+		data: {
+		},
+		success: function(data) {
+
+			//alert(data);
+			console.log(data);
+
+			$.each(data, function(i,o){
+
+				$("#browse").append("<option value='#3/"+o.name+"/"+i+"'>"+i+": "+o.name+"</option>");
+
+
+			});
+
+		}
+
+	});
+
+
+};
+
 function processPage(){
 
 
@@ -168,6 +216,7 @@ function processPage(){
 		$("#browse_window>select").height($("#search").height());
 
 		popular();
+		allJobs();
 
 	} else if (hashObj.one == "1") {
 
@@ -192,7 +241,7 @@ function processPage(){
 
 
 		$("#header_title").text("Job Group Details");
-		$("#detail_welcome>h1").text(hashObj.two);
+		$("#detail_welcome>h1").html(hashObj.two);
 
 		$(".chart").each(function(i,o){
 
@@ -211,10 +260,11 @@ function processPage(){
 function apisearch(){
 
 	$.ajax({
-		url: "/apisearch?keywordStr="+hashObj.three,
+		url: "/apisearch?size=20&start=2015&end=2017&type=projection&keywordStr="+hashObj.three,
 		data: {
 		},
 		success: function(data) {
+
 
 			//alert(data);
 			console.log(data);
@@ -223,7 +273,7 @@ function apisearch(){
 
 			$.each(data, function(i,o){
 
-				$("#match_list").append("<a href='#3/"+o.name+"/"+o.code+"'><div class='match_list_bg'></div><h1>"+o.name+"</h1><p>~"+o.total+" jobs in the next 3 years</p><i class='fa fa-chevron-circle-right'></i></a>");
+				$("#match_list").append("<a href='#3/"+o.name+"/"+o.code+"'><div class='match_list_bg'></div><h1 style=''>"+o.name+"</h1><p>~"+numberWithCommas(o.total)+" jobs in the next 3 years</p><i class='fa fa-chevron-circle-right'></i></a>");
 
 				if (i >= 4) {
 
@@ -237,6 +287,13 @@ function apisearch(){
 
 			});
 
+			if (data.length == 0) {
+
+				$("#match_list").append("<span id='loading'>No jobs found.</span>");
+
+
+			}
+
 		}
 
 	});
@@ -244,69 +301,77 @@ function apisearch(){
 
 };
 
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+var chart1;
+var chart3;
+var chart2;
 
 function detail(){
 
-	$.ajax({
-		url: "/detail?code="+hashObj.three,
-		data: {
-		},
-		success: function(data) {
 
-			//alert(data);
 
-			var info = data.info;
-			console.log(info);
 
-			console.log(data);
+		$.ajax({
+			url: "/detail?code="+hashObj.three,
+			data: {
+			},
+			success: function(data) {
 
-			var year = 2015;
+				//alert(data);
 
-			var projections = data.projections;
+				var info = data.info;
 
-			$("#projection").text(projections[year-2012]);
+				var year = 2015;
 
-			var rate = (projections[year-2012] / projections[year-2012 - 1] - 1) * 100;
+				var projections = data.projections;
 
-			if (rate < 0 ){
+				$("#projection").text(numberWithCommas(parseInt(projections[year-2013])));
 
-			$("#increase").text((rate*-1).toFixed(2)+"%");
-			$("#gap").text("decrease");
+				var rate = (projections[year-2013] / projections[year-2013 - 1] - 1) * 100;
 
-			} else {
+				if (rate < 0 ){
 
-			$("#increase").text(rate.toFixed(2)+"%");
-			$("#gap").text("increase");
+				$("#increase").text((rate*-1).toFixed(2)+"%");
+				$("#gap").text("decrease");
+
+				} else {
+
+				$("#increase").text(rate.toFixed(2)+"%");
+				$("#gap").text("increase");
+
+				}
+				chart1 = generate("c1", "Projections", projections);
+
+				var supply = data.supply;
+				var demand = data.demand;
+
+				$("#supply").text(numberWithCommas(supply[year-2013]));
+				$("#demand").text(numberWithCommas(demand[year-2013]));
+				$("#ratio").text((demand[year-2013] / supply[year-2013]).toFixed(2) + " to 1");
+
+				chart2 = generate("c2", "Supply", supply, "Demand", demand);
+
+				var schoolLeavers = data.schoolLeavers;
+				$("#schoolLeavers").text(numberWithCommas(schoolLeavers[year-2013]));
+
+				chart3 = generate("c3", "School Leavers", schoolLeavers);
+
+
+
+				$.each(info.subtypes, function(i,o){
+
+					//$("#detail_welcome>p").append(o.name);
+
+				});
 
 			}
 
-
-			generate("c1", "Projections", projections);
-
-			var supply = data.supply;
-			var demand = data.demand;
-
-			$("#supply").text(supply[year-2012]);
-			$("#demand").text(demand[year-2012]);
-			$("#ratio").text((demand[year-2012] / supply[year-2012]).toFixed(2) + " to 1");
-
-			generate("c2", "Supply", supply, "Demand", demand);
+		});
 
 
-			var schoolLeavers = data.schoolLeavers;
-			$("#schoolLeavers").text(schoolLeavers[year-2012]);
-			generate("c3", "School Leavers", schoolLeavers);
-
-
-			$.each(info.subtypes, function(i,o){
-
-				//$("#detail_welcome>p").append(o.name);
-
-			});
-
-		}
-
-	});
 
 
 };
@@ -314,7 +379,7 @@ function detail(){
 function range(){
 
 	$.ajax({
-		url: "/range?start="+hashObj.three+"&end="+(parseInt(hashObj.three) + 3),
+		url: "/range?size=20&type=projection&start="+hashObj.three+"&end="+(parseInt(hashObj.three) + 2),
 		data: {
 		},
 		success: function(data) {
@@ -325,7 +390,7 @@ function range(){
 
 			$.each(data, function(i,o){
 
-				$("#match_list").append("<a href='#3/"+o.name+"/"+o.code+"'><div class='match_list_bg'></div><h1>"+o.name+"</h1><p>~"+o.total+" jobs in the next 3 years</p><i class='fa fa-chevron-circle-right'></i></a>");
+				$("#match_list").append("<a href='#3/"+o.name+"/"+o.code+"'><div class='match_list_bg'></div><h1>"+o.name+"</h1><p>~"+numberWithCommas(o.total)+" jobs in the next 3 years</p><i class='fa fa-chevron-circle-right'></i></a>");
 
 /*
 					<a href='#3/"+o.name+"/"+o.code+"'><h1>"+o.name+"</h1></a>");
@@ -344,7 +409,7 @@ function range(){
 function popular(){
 
 	$.ajax({
-		url: "/range?start=2015&end=2018",
+		url: "/range?start=2015&end=2017&type=projection",
 		data: {
 		},
 		success: function(data) {
@@ -355,7 +420,7 @@ function popular(){
 			$.each(data, function(i,o){
 
 				$("#popular_list").append("<a href='#3/"+o.name+"/"+o.code+"'><h1>"+o.name+"</h1></a>");
-				$("#popular_list>a:last").append("<h2>~"+o.total+" jobs in the next 3 years</h2>");
+				$("#popular_list>a:last").append("<h2>~"+numberWithCommas(o.total)+" jobs in the next 3 years</h2>");
 
 
 			});
@@ -372,19 +437,15 @@ function generate(id, label, data, label2, data2){
 	data.unshift(label);
 
 	var columns = [];
-	columns.push(['x', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022']);
-	columns.push(data);
+	columns.push(['x', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022']);
 
-	if (data2 != undefined) {
-
-		data2.unshift(label2);
-		columns.push(data2);
-
-
-	}
 
 	var chart = c3.generate({
 	    bindto: "#"+id,
+	    transition: { duration: 0 },
+	    size: {
+  			height: 300
+		},
 	    data: {
 	        x: 'x',
 	        columns: columns,
@@ -398,13 +459,30 @@ function generate(id, label, data, label2, data2){
     
 	});	
 
+	columns.push(data);
+
+	if (data2 != undefined) {
+
+		data2.unshift(label2);
+		columns.push(data2);
+
+	}	
+
+	setTimeout(function () {
+	    chart.load({
+	        columns: columns
+	    });
+	}, 2000);	
+
+	return chart;
+
 }
 
 $(document).on("click", "#header_menu_toggle", function(){
 
 	//$("#main_menu").toggleClass("active");
 	//$(this).toggleClass("active");
-	window.history.back()
+	//window.history.back()
 
 
 });
@@ -414,6 +492,7 @@ function bodyCleanup(){
 
 	//$("#main_menu").removeClass("active");
 	$("#main_menu, #body").css("padding-top", $("#header").height());
+    //FastClick.attach(document.body);
 	//$("#body").css("min-height", $(window).height());
 
 }
@@ -443,10 +522,6 @@ $(document).on("click", "#keyword_search", function(e){
 		$("#search").focus();
 
 	} else {
-      
-      // Make text search more forgiving
-      q = q.trim().replace(/\W/g, ' ').replace(/\s+/g, ' ').replace(/\s/g, '+');
-
 
 		var href = $(this).attr("href") + "/" + q;
 		window.location.href = href;
@@ -464,3 +539,14 @@ $(document).on("click", "#range_search", function(e){
 	window.location.href = href;
 
 });
+
+
+$(document).on("click", "#browse_go", function(e){
+
+	e.preventDefault();
+
+	var q = $("#browse").val();
+	window.location.href = q;
+
+});
+
